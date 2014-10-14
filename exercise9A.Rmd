@@ -1,0 +1,73 @@
+---
+title: "exercise9A"
+output: html_document
+---
+
+
+#### Multiple linear regression - additive model
+```{r}
+loyn <- read.table('Chapter9/Data/loyn.csv', header=T, sep=',')
+```
+
+#### Asess assumptions of linearity, normality and homogeneity of variance.
+```{r}
+library(car)
+scatterplotMatrix(~ABUND+AREA+YR.ISOL+DIST+LDIST+GRAZE+ALT, data=loyn, diag="boxplot")
+```
+
+*Conclusions - AREA, DIST, LDIST variables non-normal and consequently the relationship show non-linearity. 
+
+#### Scale transformations should be attempted.
+```{r}
+scatterplotMatrix(~ABUND+log10(AREA)+YR.ISOL+log10(DIST)+
+                     log10(LDIST)+GRAZE+ALT, data=loyn, diag="boxplot")
+```
+
+* log 10 transfromation appear successful. no evidence of non-normality, non-homogeneity of variacne or non-linearity
+
+#### Assess multicollinearity
+```{r}
+cor(loyn[,2:7])
+```
+
+* Conclusions - With the exception of GRAZE and YR.ISOL, non corrrelations
+
+#### Variance inflation and their inverse(tolerances)
+```{r}
+vif(lm(ABUND~log10(AREA)+YR.ISOL+log10(DIST)+log10(LDIST) +GRAZE+ALT, data=loyn))
+1/vif(lm(ABUND~log10(AREA)+YR.ISOL+log10(DIST)+log10(LDIST) +GRAZE+ALT, data=loyn))
+```
+
+* Conclusions - VIF < 5, tolerances > 0.2 means that multicollinearity is unlikely to be a problem.
+
+#### Fit the additive muliple linear model
+```{r}
+loyn.lm<-lm(ABUND~log10(AREA)+YR.ISOL+log10(DIST)+log10(LDIST)+GRAZE+ALT,
+            data=loyn)
+```
+
+#### Plotting
+```{r}
+plot(loyn.lm)
+```
+
+* Conclusions - There is no obvious "Wedge" pattern evident in the residual plot. none of the point approach the high Cook's D contours suggesting theat none of the observations are overly influential on the final fitted model.
+
+#### Influence
+```{r}
+influence.measures(loyn.lm)
+```
+
+* Conclusions - leverage(hat) values are greater than 2*p/n = 0.286. none of the Cook's D values are >= 1. Hence the hypothesis tests are likely to be reliable.
+
+#### Summary
+```{r}
+summary(loyn.lm)
+```
+
+* Conclusions - a significant positive partial slope for bird abundance against log10 patch area. The overall model explained 69% of the vairablility
+
+#### Individual partial relationships between the response variable and each of the predictor variable
+```{r}
+avPlots(loyn.lm, ask=F)
+```
